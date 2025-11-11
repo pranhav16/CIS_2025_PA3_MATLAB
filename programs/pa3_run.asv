@@ -1,0 +1,127 @@
+%% 1. SETUP - Define input file names
+% Input files (modify 'X' to match your dataset: A, B, C, etc.)
+dataset = 'A';  % Change this to match your dataset letter
+type = 'debug';
+body_A_file = 'Problem3-BodyA.txt';
+body_B_file = 'Problem3-BodyB.txt';
+mesh_file = 'Problem3Mesh.sur';
+sample_file = sprintf('pa3-%s-%s-SampleReadings.txt', dataset,type);
+
+%% 2. READ INPUT FILES
+% Read body A (pointer with tip)
+[A_markers, A_tip] = read_body(body_A_file);
+N_A = size(A_markers, 1);
+
+% Read body B (base/reference body)
+[B_markers, B_tip] = read_body(body_B_file);
+N_B = size(B_markers, 1);
+
+% Read mesh surface
+[vertices, triangles] = read_mesh(mesh_file);
+N_vertices = size(vertices, 1);
+N_triangles = size(triangles, 1);
+
+% Read sample readings from tracker
+[a_readings, b_readings, N_samps] = read_sample_readings(sample_file, N_A, N_B);
+
+%% 3. PROCESS EACH SAMPLE FRAME
+% Preallocate output arrays
+d_k_array = zeros(N_samps, 3);  % Pointer tip positions in B frame
+c_k_array = zeros(N_samps, 3);  % Closest points on mesh
+differences = zeros(N_samps, 1); % Distances ||d_k - c_k||
+
+% Process progress
+progress_step = max(1, floor(N_samps / 10));
+
+for k = 1:N_samps
+    
+    %% a. Get marker readings for frame k
+    a_k = a_readings(:, :, k);  % N_A x 3 - Body A markers in tracker frame
+    b_k = b_readings(:, :, k);  % N_B x 3 - Body B markers in tracker frame
+    
+    %% b. Compute F_A,k (transformation from A body frame to tracker frame)
+    % Find R_A and t_A such that: tracker_coords ≈ R_A * body_coords + t_A
+    [R_A, t_A] = find_transformation(A_markers, a_k);
+    
+    % Build homogeneous transformation matrix F_A_k
+    F_A_k = [R_A, t_A; 0 0 0 1];  % 4x4 transformation matrix
+    
+    %% c. Compute F_B,k (transformation from B body frame to tracker frame)
+    [R_B, t_B] = find_transformation(B_markers, b_k);
+    
+    % Build homogeneous transformation matrix F_B_k
+    F_B_k = [R_B, t_B; 0 0 0 1];  % 4x4 transformation matrix
+    
+    %% d. Compute d_k (pointer tip position in B body frame)
+    % Chain of transformations:
+    % A_tip (in A frame) -> F_A_k -> tracker frame -> F_B_k^(-1) -> B frame
+    [R_B_inv, t_B_inv] = invert_transform(R_B, t_B);
+    F_B_k_inv = [R_B_inv, t_B_inv; 0 0 0 1];
+    
+    % Convert A_tip to homogeneous coordinates
+    A_tip_homog = [A_tip(:); 1];  % 4x1 vector
+    
+    % Transform tip from A frame to B frame through tracker frame
+    d_k_homog = F_B_k_inv * F_A_k * A_tip_homog;
+    
+    % Extract Cartesian coordinates
+    d_k = d_k_homog(1:3)/d_k_homog(4);
+    
+    %% e. Find closest point on mesh to d_k
+    % For PA3, we're finding the closest point on the mesh surface
+    [c_k, dist] = closest_point_on_mesh(d_k, vertices, triangles);
+    
+    %% f. Store results
+    d_k_array(k, :) = d_k';
+    c_k_array(k, :) = c_k';
+    differences(k) = dist;
+end
+
+fprintf('Processing complete!\n\n');
+
+%% 4. COMPUTE AND DISPLAY STATISTICS
+fprintf('=== Results Summary ===\n');
+fprintf('Mean distance: %.4f mm\n', mean(differences));
+fprintf('Std deviation: %.4f mm\n', std(differences));
+fprintf('Min distance:  %.4f mm\n', min(differences));
+fprintf('Max distance:  %.4f mm\n', max(differences));
+fprintf('Median:        %.4f mm\n', median(differences));
+
+%% 5. OPTIONAL: VISUALIZATION
+% Uncomment to visualize results
+
+% figure('Position', [100 100 1200 500]);
+% 
+% % Plot 1: Mesh with sample points
+% subplot(1,2,1);
+% hold on;
+% trisurf(triangles(:,1:3), vertices(:,1), vertices(:,2), vertices(:,3), ...
+%         'FaceColor', 'cyan', 'FaceAlpha', 0.3, 'EdgeColor', 'blue', 'EdgeAlpha', 0.2);
+% plot3(d_k_array(:,1), d_k_array(:,2), d_k_array(:,3), ...
+%       'ro', 'MarkerSize', 4, 'MarkerFaceColor', 'r');
+% plot3(c_k_array(:,1), c_k_array(:,2), c_k_array(:,3), ...
+%       'go', 'MarkerSize', 4, 'MarkerFaceColor', 'g');
+% grid on; axis equal;
+% xlabel('X (mm)'); ylabel('Y (mm)'); zlabel('Z (mm)');
+% legend('Mesh', 'Pointer Tips (d_k)', 'Closest Points (c_k)');
+% title('3D Visualization');
+% view(3);
+% 
+% % Plot 2: Distance histogram
+% subplot(1,2,2);
+% histogram(differences, 20, 'FaceColor', 'blue', 'EdgeColor', 'black');
+% xlabel('Distance (mm)');
+% ylabel('Frequency');
+% title('Distance Distribution ||d_k - c_k||');
+% grid on;
+
+%% 6. SAVE RESULTS TO WORKSPACE
+fprintf('\nResults saved to workspace variables:\n');
+fprintf('  d_k_array: %dx%d (pointer tip positions)\n', size(d_k_array,1), size(d_k_array,2));
+fprintf('  c_k_array: %dx%d (closest mesh points)\n', size(c_k_array,1), size(c_k_array,2));
+fprintf('  differences: %dx%d (distances)\n', size(differences,1), size(differences,2));
+
+% Optional: Save to .mat file for later use
+% save('pa3_results.mat', 'd_k_array', 'c_k_array', 'differences');
+
+fprintf('\nScript complete!\n');
