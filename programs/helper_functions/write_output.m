@@ -21,8 +21,7 @@ fid = fopen(output_filename, 'w');
         
         diff = diff_array(k);
         
-        fprintf(fid, '%.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f\n', ...
-                d_x, d_y, d_z, c_x, c_y, c_z, diff);
+        fprintf(fid, '%.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f\n',d_x, d_y, d_z, c_x, c_y, c_z, diff);
     end
     
     fclose(fid);
