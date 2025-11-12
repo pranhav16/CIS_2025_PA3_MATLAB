@@ -1,3 +1,7 @@
+% closest_point_on_triangle.m
+% author: luiza
+% this function finds the closest point c on a single triangle to a point p
+
 function [c,dist] = closest_point_on_triangle(p, v1, v2, v3)
 p = p(:);
 v1 = v1(:);

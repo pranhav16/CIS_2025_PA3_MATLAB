@@ -1,3 +1,6 @@
+% read_sample_readings.m
+% author: luiza
+% this function reads a ...samplereadings.txt file
 function [a_markers, b_markers, N_samples] = read_sample_readings(filename, N_A, N_B)
         thisDir = fileparts(mfilename('fullpath'));
     % Two levels up

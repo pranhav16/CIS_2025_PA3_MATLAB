@@ -1,3 +1,7 @@
+% pa3.m
+%authors: luiza and pranhav
+% this is the main function for pa3, calls the helper functions
+% it reads data for rigid bodies and a mesh, calculates the pointer tip position for various samples, and finds the closest point on the mesh to that tip
 function pa3(type, dataset)
 
     thisDir = fileparts(mfilename('fullpath'));
@@ -66,7 +70,7 @@ for k = 1:N_samps
     c_k_array(k, :) = c_k';
     differences(k) = dist;
 end
-
+% write output file
 output_file = sprintf('PA3-%s-%s-Output.txt', dataset,type);
     current_file_path = fileparts(mfilename('fullpath'));
     
@@ -78,6 +82,7 @@ output_file = sprintf('PA3-%s-%s-Output.txt', dataset,type);
     else
         fprintf('Directory already exists: %s\n', output_dir);
     end
+    %call helper function
 write_output(output_file, d_k_array, c_k_array, differences);
 
 end

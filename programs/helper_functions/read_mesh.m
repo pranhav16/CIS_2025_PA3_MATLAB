@@ -1,3 +1,7 @@
+% read_mesh.m
+%author: pranhav
+% read problemXMeshFile.sur file
+
 function [vertices, triangles] = read_mesh(filename)
     thisDir = fileparts(mfilename('fullpath'));
     % Two levels up
@@ -14,7 +18,7 @@ function [vertices, triangles] = read_mesh(filename)
         line = fgetl(fid);
         N_vertices = str2double(line);
         vertices = zeros(N_vertices, 3);
-        
+        % loop through vertices
         for i = 1:N_vertices
             line = fgetl(fid);
             coords = textscan(line, '%f %f %f', 'Delimiter', ',');
@@ -22,10 +26,11 @@ function [vertices, triangles] = read_mesh(filename)
             vertices(i, 2) = coords{2};
             vertices(i, 3) = coords{3};
         end
-        
+        % read N_triangles
         line = fgetl(fid);
         N_triangles = str2double(line);
         triangles = zeros(N_triangles, 6);
+        %loop and read N_triangles lines
           for i = 1:N_triangles
             line = fgetl(fid);
             indices = textscan(line, '%d %d %d %d %d %d', 'Delimiter', ',');
