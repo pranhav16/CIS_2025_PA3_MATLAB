@@ -6,7 +6,7 @@ function pa3(type, dataset)
 
     thisDir = fileparts(mfilename('fullpath'));
     parent1 = fileparts((thisDir));
-    addpath(genpath(parent1));  %add everything to MATLAB path  
+    addpath(genpath(parent1));  
 %% 1. SETUP - Define input file names
 
 body_A_file = 'Problem3-BodyA.txt';
@@ -26,31 +26,32 @@ N_triangles = size(triangles, 1);
 [a_readings, b_readings, N_samps] = read_sample_readings(sample_file, N_A, N_B);
 
 %% 3. PROCESS SAMPLE FRAME
-% Preallocate output arrays
-d_k_array = zeros(N_samps, 3);  % Pointer tip positions in B frame
-c_k_array = zeros(N_samps, 3);  % Closest points on mesh
-differences = zeros(N_samps, 1); % Distances ||d_k - c_k||
+% Initilaize output arrays
+d_k_array = zeros(N_samps, 3);  
+c_k_array = zeros(N_samps, 3);  
+differences = zeros(N_samps, 1); 
 
 for k = 1:N_samps
     
     %% Get marker readings
-    a_k = a_readings(:, :, k);  % N_A x 3 
-    b_k = b_readings(:, :, k);  % N_B x 3 
+   % These are Nx3
+    a_k = a_readings(:, :, k);  
+    b_k = b_readings(:, :, k);   
     
     %% Compute F_A
     [R_A, t_A] = find_transformation(A_markers, a_k);
-       F_A_k = [R_A, t_A; 0 0 0 1];  % 4x4 transformation matrix
+       F_A_k = [R_A, t_A; 0 0 0 1];  
     
     %% Compute F_B
     [R_B, t_B] = find_transformation(B_markers, b_k);
     
-    F_B_k = [R_B, t_B; 0 0 0 1];  % 4x4 transformation matrix
+    F_B_k = [R_B, t_B; 0 0 0 1]; 
     
     %% Compute d_k 
     [R_B_inv, t_B_inv] = invert_transform(R_B, t_B);
     F_B_k_inv = [R_B_inv, t_B_inv; 0 0 0 1];
     
-    A_tip_homog = [A_tip(:); 1];  % 4x1 vector
+    A_tip_homog = [A_tip(:); 1]; 
     
     d_k_homog = F_B_k_inv * F_A_k * A_tip_homog;
     
