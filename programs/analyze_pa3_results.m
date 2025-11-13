@@ -12,18 +12,14 @@ addpath(genpath(fullfile(currentDir, '..')));
 fprintf('--- PA3 Full Results and Analysis Script ---\n\n');
 
 %% --- CONFIGURATION ---
-
 my_output_dir = fullfile(currentDir, '..', 'output');
 provided_output_dir = fullfile(currentDir, '..', '2025_pa345_student_data', '2025 PA345 Student Data');
-
 % --- Datasets ---
 debug_datasets = {'A', 'B', 'C', 'D', 'E', 'F'};
 unknown_datasets = {'G', 'H', 'J'};
 
 %% === PART 1: Run pa3 for all datasets ===
 fprintf('=== Part 1: Running pa3 for all datasets... ===\n');
-
-% Run Debug Datasets
 fprintf('Running Debug Datasets (A-F)...\n');
 for i = 1:length(debug_datasets)
     dataset = debug_datasets{i};
@@ -34,8 +30,6 @@ for i = 1:length(debug_datasets)
         fprintf('    ERROR running pa3 for Debug %s: %s\n', dataset, ME.message);
     end
 end
-
-% Run Unknown Datasets
 fprintf('Running Unknown Datasets (G, H, J)...\n');
 for i = 1:length(unknown_datasets)
     dataset = unknown_datasets{i};
@@ -61,31 +55,19 @@ for i = 1:length(debug_datasets)
     my_file = fullfile(my_output_dir, sprintf('PA3-%s-Debug-Output.txt', dataset));
     provided_file = fullfile(provided_output_dir, sprintf('PA3-%s-Debug-Output.txt', dataset));
     
-    try
         my_data = read_output_file(my_file);
         provided_data = read_output_file(provided_file);
-        
-        % Extract columns [d_x, d_y, d_z, c_x, c_y, c_z, |d-c|]
         my_c_k = my_data(:, 4:6);
         provided_c_k = provided_data(:, 4:6);
         my_dist = my_data(:, 7);
-        provided_dist = provided_data(:, 7);
-        
-        % Calculate RMSE for c_k points
+        provided_dist = provided_data(:, 7); 
         sq_errors = sum((my_c_k - provided_c_k).^2, 2);
         rmse_c_k = sqrt(mean(sq_errors));
-        
-        % Calculate Mean Absolute Error (MAE) for the distance
         mae_dist = mean(abs(my_dist - provided_dist));
         
         fprintf('|    %s    |     %.6e      |       %.6e       |\n', ...
             dataset, rmse_c_k, mae_dist);
-    catch ME
-        fprintf('|    %s    | FAILED: %s\n', dataset, ME.message);
-        if contains(ME.message, 'File not found')
-             fprintf('|         | -> Check your `provided_output_dir` path variable.\n');
-        end
-    end
+
 end
 
 %% === PART 3: Tabulate Unknown Datasets ===
@@ -127,14 +109,13 @@ fprintf('\nAnalysis complete.\n');
 
 %% --- Helper function to read the PA3 output file format ---
 function data = read_output_file(filename)
-    % Opens and reads the 7-column, comma-separated PA3 output file
     fid = fopen(filename, 'r');
     if fid == -1
         error('File not found: %s', filename);
     end
     
     try
-        fgetl(fid); % Skip header line
+        fgetl(fid); 
         data = cell2mat(textscan(fid, '%f %f %f %f %f %f %f', 'Delimiter', ','));
         fclose(fid);
     catch ME

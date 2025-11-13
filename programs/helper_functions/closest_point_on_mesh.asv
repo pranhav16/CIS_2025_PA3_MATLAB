@@ -17,17 +17,15 @@ c = zeros(3, 1);
 
 
 for i = 1:M
-    idx1 = triangles(i, 1); 
+    idx1 = triangles(i, 1); % get indices of 3 vertices
     idx2 = triangles(i, 2);
     idx3 = triangles(i, 3);
-    v1 = vertices(idx1, 1:3)'; 
+    v1 = vertices(idx1, 1:3)'; %3d coordinates
     v2 = vertices(idx2, 1:3)';
     v3 = vertices(idx3, 1:3)';
-
+    %closest point to point p
     [c_tri, dist_tri] = closest_point_on_triangle(p, v1, v2, v3);
-
-    
-    if dist_tri < min_distance 
+    if dist_tri < min_distance %check to see if this triangle is closer than previous
         min_distance = dist_tri;
         c = c_tri;
     end

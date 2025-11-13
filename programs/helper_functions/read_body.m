@@ -10,14 +10,14 @@ function [markers, tip] = read_body(filename)
     if fid == -1
         error('Unable to open file: %s', filename);
     end
-    
-    % read header 
-        firstLine = fgetl(fid);
+   firstLine = fgetl(fid);
         parsedData = textscan(firstLine, '%d %s', 'Delimiter', ',');
         N_markers = parsedData{1};
-        %pre allocate markers array
+
+
+
         markers = zeros(N_markers, 3);
-        % loop and read N_markers lines
+        
         for i = 1:N_markers
             line = fgetl(fid);
             coords = textscan(line, '%f %f %f', 'Delimiter', ',');
@@ -25,11 +25,12 @@ function [markers, tip] = read_body(filename)
             markers(i, 2) = coords{2};
             markers(i, 3) = coords{3};
         end
-        % read last line, which is the tip coordinate
+
+
+
         tipLine = fgetl(fid);
         tipCoords = textscan(tipLine, '%f %f %f', 'Delimiter', ',');
         tip = [tipCoords{1}, tipCoords{2}, tipCoords{3}];
-        
         fclose(fid);
         
 end

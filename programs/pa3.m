@@ -15,20 +15,14 @@ mesh_file = 'Problem3Mesh.sur';
 sample_file = sprintf('PA3-%s-%s-SampleReadingsTest.txt', dataset,type);
 
 %% 2. READ INPUT FILES
-% Read body A (pointer with tip)
 [A_markers, A_tip] = read_body(body_A_file);
 N_A = size(A_markers, 1);
-
-% Read body B (base/reference body)
 [B_markers, B_tip] = read_body(body_B_file);
 N_B = size(B_markers, 1);
-
-% Read mesh surface
 [vertices, triangles] = read_mesh(mesh_file);
 N_vertices = size(vertices, 1);
 N_triangles = size(triangles, 1);
 
-% Read sample readings from tracker
 [a_readings, b_readings, N_samps] = read_sample_readings(sample_file, N_A, N_B);
 
 %% 3. PROCESS SAMPLE FRAME
@@ -39,11 +33,11 @@ differences = zeros(N_samps, 1); % Distances ||d_k - c_k||
 
 for k = 1:N_samps
     
-    %% a. Get marker readings
+    %% Get marker readings
     a_k = a_readings(:, :, k);  % N_A x 3 
     b_k = b_readings(:, :, k);  % N_B x 3 
     
-    %% b. Compute F_A
+    %% Compute F_A
     [R_A, t_A] = find_transformation(A_markers, a_k);
        F_A_k = [R_A, t_A; 0 0 0 1];  % 4x4 transformation matrix
     
@@ -52,7 +46,7 @@ for k = 1:N_samps
     
     F_B_k = [R_B, t_B; 0 0 0 1];  % 4x4 transformation matrix
     
-    %% Compute d_k (pointer tip position in B body frame)
+    %% Compute d_k 
     [R_B_inv, t_B_inv] = invert_transform(R_B, t_B);
     F_B_k_inv = [R_B_inv, t_B_inv; 0 0 0 1];
     
@@ -62,7 +56,7 @@ for k = 1:N_samps
     
     d_k = d_k_homog(1:3)/d_k_homog(4);
     
-    %% Find closest point on mesh to d_k
+    %% Find closest point on mesh (c_k) to d_k
     [c_k, dist] = closest_point_on_mesh(d_k, vertices, triangles);
     
     %% Store results
@@ -82,7 +76,6 @@ output_file = sprintf('PA3-%s-%s-Output.txt', dataset,type);
     else
         fprintf('Directory already exists: %s\n', output_dir);
     end
-    %call helper function
 write_output(output_file, d_k_array, c_k_array, differences);
 
 end
